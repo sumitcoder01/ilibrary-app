@@ -2,7 +2,7 @@ import ReactDOM from 'react-dom/client'
 import 'react-toastify/dist/ReactToastify.css';
 import './index.css';
 import App from './App.tsx'
-import { Route, RouterProvider, createBrowserRouter, createRoutesFromElements } from "react-router-dom";
+import { Navigate, Route, RouterProvider, createBrowserRouter, createRoutesFromElements } from "react-router-dom";
 import { AuthProvider } from './context/authContext.tsx';
 import { ToastContainer, Zoom } from 'react-toastify';
 import Login from './pages/Login.tsx';
@@ -14,6 +14,7 @@ import NotFound from './pages/NotFound.tsx';
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />}>
+      <Route path="home" element={<Navigate to="/" />} />
       <Route path="signup" element={<Signup />} />
       <Route path="login" element={<Login />} />
       <Route path="/" element={<Protected />}>
