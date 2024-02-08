@@ -1,14 +1,13 @@
 import { initializeApp } from "firebase/app";
-const {API_KEY,AUTH_DOMAIN,PROJECT_ID,STORAGE_BUCKET,SENDER_ID,APP_ID,DATABASE_URL} = process.env;
 
 const firebaseConfig = {
-  apiKey: API_KEY,
-  authDomain:AUTH_DOMAIN,
-  projectId: PROJECT_ID,
-  storageBucket:STORAGE_BUCKET,
-  messagingSenderId: SENDER_ID,
-  appId: APP_ID,
-  databaseURL:DATABASE_URL
+  apiKey: "AIzaSyAeVykIIYTKxnGa6P6O2QTdOzkx7Gl-Blc",
+  authDomain: "ilibrary-app.firebaseapp.com",
+  projectId: "ilibrary-app",
+  storageBucket: "ilibrary-app.appspot.com",
+  messagingSenderId: "127162217351",
+  appId: "1:127162217351:web:0d60d86050257135e79922",
+  databaseURL: "https://ilibrary-app-default-rtdb.firebaseio.com/"
 };
 
 
