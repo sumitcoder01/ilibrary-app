@@ -16,6 +16,7 @@ import Contact from './pages/Contact.tsx';
 import Books from './pages/Books.tsx';
 import About from './pages/About.tsx';
 import AddBook from './pages/AddBook.tsx';
+import { DbProvider } from './context/dbContext.tsx';
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -39,7 +40,9 @@ const router = createBrowserRouter(
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <>
     <AuthProvider>
-      <RouterProvider router={router} />
+      <DbProvider>
+        <RouterProvider router={router} />
+      </DbProvider>
     </AuthProvider>
     <ToastContainer
       position="top-center"

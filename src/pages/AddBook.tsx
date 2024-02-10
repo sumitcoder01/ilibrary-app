@@ -1,17 +1,27 @@
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useRef, useState } from "react";
 import { IoMdSend } from "react-icons/io";
 import Logo from "../assets/library-logo.svg";
 import { useAuth } from "../context/authContext";
+import { useFirestore } from "../context/dbContext";
 
 export default function AddBook() {
+  const { addBook } = useFirestore()
   const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     price: "",
+    isbn: "",
     author: "",
-    image: null,
+    coverPic: null,
   });
+
+  const resetFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const handleOnChange = (e: ChangeEvent<HTMLInputElement> | ChangeEvent<HTMLTextAreaElement>) => {
     if (e.target.type === "file") {
@@ -25,13 +35,20 @@ export default function AddBook() {
 
   const handleOnSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log({ ...formData, sellerId: user ? user.uid : "" });
+    const { title, description, author, price, isbn, coverPic } = formData;
+    const sellerId = user ? user.uid : "";
+    if (addBook && coverPic)
+      addBook(title, description, author, sellerId, Number(price), Number(isbn), coverPic);
+    
+    resetFileInput();
+
     setFormData({
       title: "",
       description: "",
       price: "",
+      isbn: "",
       author: "",
-      image: null,
+      coverPic: null,
     });
   };
 
@@ -94,7 +111,7 @@ export default function AddBook() {
               htmlFor="price"
               className="block text-sm font-medium leading-6 text-gray-900"
             >
-              Price
+              ₹ Price
             </label>
             <div className="mt-2">
               <input
@@ -104,6 +121,26 @@ export default function AddBook() {
                 placeholder="Enter book price"
                 required
                 value={formData.price}
+                onChange={handleOnChange}
+                className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder-gray-400 px-3 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
+              />
+            </div>
+          </div>
+          <div>
+            <label
+              htmlFor="isbn"
+              className="block text-sm font-medium leading-6 text-gray-900"
+            >
+              Isbn
+            </label>
+            <div className="mt-2">
+              <input
+                id="isbn"
+                name="isbn"
+                type="number"
+                placeholder="Enter book isbn"
+                required
+                value={formData.isbn}
                 onChange={handleOnChange}
                 className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder-gray-400 px-3 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
               />
@@ -135,17 +172,18 @@ export default function AddBook() {
               htmlFor="image"
               className="block text-sm font-medium leading-6 text-gray-900"
             >
-              Image
+              CoverPic
             </label>
             <div className="mt-2">
               <input
-                id="image"
-                name="image"
+                id="coverPic"
+                name="coverPic"
                 type="file"
                 accept="image/*"
+                ref={fileInputRef}
                 required
                 onChange={handleOnChange}
-                className="block w-full border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 px-3 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
+                className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 px-3 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
               />
             </div>
           </div>

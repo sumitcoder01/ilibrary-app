@@ -5,8 +5,8 @@ import { toast } from "react-toastify";
 
 const AuthContext = createContext<{
     user?: User | null;
-    createUser?: (arg0: string, arg1: string, arg2: string) => void;
-    loginUser?: (arg0: string, arg1: string) => void;
+    createUser?: (name: string, email: string, password: string) => void;
+    loginUser?: (email: string, password: string) => void;
     logoutUser?: () => void;
     loginWithGoogle?: () => void;
 }>({});
