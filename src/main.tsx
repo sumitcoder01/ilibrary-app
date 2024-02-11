@@ -17,6 +17,8 @@ import Books from './pages/Books.tsx';
 import About from './pages/About.tsx';
 import AddBook from './pages/AddBook.tsx';
 import { DbProvider } from './context/dbContext.tsx';
+import MyBooks from './pages/MyBooks.tsx';
+import ViewOrders from './pages/ViewOrders.tsx';
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -32,6 +34,8 @@ const router = createBrowserRouter(
         <Route path="myaccount" element={<MyAccount />} />
         <Route path="myorders" element={<MyOrders />} />
         <Route path="addbook" element={<AddBook />} />
+        <Route path="mybooks" element={<MyBooks />} />
+        <Route path="orders/order/:bookId" element={<ViewOrders />} />
       </Route>
       <Route path='*' element={<NotFound />} />
     </Route>

@@ -1,9 +1,11 @@
 import { app } from "../firebase";
 import { useContext, useState, useEffect, createContext, ReactNode } from "react";
 import { toast } from "react-toastify";
-import { addDoc, collection, getFirestore, getDocs } from "firebase/firestore";
+import { addDoc, collection, getFirestore, getDocs, query, where } from "firebase/firestore";
 import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import { Book } from "../interfaces/book";
+import { User } from "firebase/auth";
+import { Order, OrderDetail } from "../interfaces/order";
 
 
 const DbContext = createContext<{
@@ -11,7 +13,10 @@ const DbContext = createContext<{
     getBooks?: () => Promise<Book[]>;
     getImageUrl?: (path: string) => Promise<string>;
     saveContact?: (name: string, email: string, phoneNumber: string, address: string, message: string) => Promise<void>;
-    placeOrder?: (userId: string, book: Book) => Promise<void>;
+    placeOrder?: (user: User, book: Book) => Promise<void>;
+    getMyOrders?: (userId: string) => Promise<Order[]>;
+    getBookOrders?: (bookId: string) => Promise<OrderDetail[]>;
+    getMyBooks?: (userId: string) => Promise<Book[]>;
 }>({});
 
 
@@ -77,12 +82,20 @@ export function DbProvider({ children }: { children: ReactNode }) {
         }
     }
 
-    const placeOrder = async (userId: string, book: Book): Promise<void> => {
+    const placeOrder = async (user: User, book: Book): Promise<void> => {
         const timeStamp = new Date();
         try {
             await addDoc(collection(firestore, "orders"), {
-                userId,
+                userId: user.uid,
                 book,
+                order_at: timeStamp,
+                status: "Pending"
+            });
+            await addDoc(collection(firestore, "books", book.id, "orders"), {
+                userId: user.uid,
+                displayName: user.displayName,
+                photoUrl: user.photoURL,
+                email: user.email,
                 order_at: timeStamp,
                 status: "Pending"
             });
@@ -94,11 +107,55 @@ export function DbProvider({ children }: { children: ReactNode }) {
 
     }
 
+    const getMyOrders = async (userId: string): Promise<Order[]> => {
+        const ordersList: Order[] = [];
+        try {
+            const q = query(collection(firestore, "orders"), where("userId", "==", userId));
+            const orderSnapshot = await getDocs(q);
+            orderSnapshot.forEach(doc => {
+                ordersList.push({ id: doc.id, ...doc.data() } as Order);
+            });
+        } catch (error) {
+            toast.error("sorry! Error fetching orders:");
+            console.log("Error fetching orders:", error);
+        }
+        return ordersList;
+    }
+
+    const getMyBooks = async (userId: string): Promise<Book[]> => {
+        const booksList: Book[] = [];
+        try {
+            const q = query(collection(firestore, "books"), where("sellerId", "==", userId));
+            const booksSnapshot = await getDocs(q);
+            booksSnapshot.forEach(doc => {
+                booksList.push({ id: doc.id, ...doc.data() } as Book);
+            });
+        } catch (error) {
+            toast.error("sorry! Error fetching books:");
+            console.log("Error fetching books:", error);
+        }
+        return booksList;
+    }
+
+    const getBookOrders = async (bookId: string): Promise<OrderDetail[]> => {
+        const ordersList: OrderDetail[] = [];
+        try {
+            const orderSnapshot = await getDocs(collection(firestore, "books", bookId, "orders"));
+            orderSnapshot.forEach(doc => {
+                ordersList.push({ id: doc.id, ...doc.data() } as OrderDetail);
+            });
+        } catch (error) {
+            toast.error("sorry! Error fetching orders:");
+            console.log("Error fetching orders:", error);
+        }
+        return ordersList;
+    }
+
     useEffect(() => {
         setLoading(false);
     }, []);
 
-    const value = { addBook, getBooks, getImageUrl, saveContact, placeOrder };
+    const value = { addBook, getBooks, getImageUrl, saveContact, placeOrder, getMyOrders, getBookOrders, getMyBooks };
 
     return (
         <DbContext.Provider value={value}>

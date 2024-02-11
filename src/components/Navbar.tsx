@@ -51,6 +51,8 @@ export default function Navbar() {
                 {dropDown && <div className="absolute flex flex-col items-center spacey-3 z-10 top-14 right-28 bg-gray-50 shadow-lg p-4">
                     <Link onClick={() => setDropDown(false)} to="/myaccount" className='py-1 hover:text-indigo-800 text-sm transition duration-300 ease-in-out'>My Account</Link>
                     <hr className='border-t border-gray-200 mt-1 w-full' />
+                    <Link onClick={() => setDropDown(false)} to="/mybooks" className='py-1 hover:text-indigo-800 text-sm transition duration-300 ease-in-out'>My Books</Link>
+                    <hr className='border-t border-gray-200 mt-1 w-full' />
                     <Link onClick={() => setDropDown(false)} to="/myorders" className='py-1 hover:text-indigo-800 text-sm transition duration-300 ease-in-out'>My Orders</Link>
                     <hr className='border-t border-gray-200 mt-1 w-full' />
                     <Link onClick={() => setDropDown(false)} to="/addbook" className='py-1 hover:text-indigo-800 text-sm transition duration-300 ease-in-out'>Add Book</Link>
