@@ -11,6 +11,7 @@ const DbContext = createContext<{
     getBooks?: () => Promise<Book[]>;
     getImageUrl?: (path: string) => Promise<string>;
     saveContact?: (name: string, email: string, phoneNumber: string, address: string, message: string) => Promise<void>;
+    placeOrder?: (userId: string, book: Book) => Promise<void>;
 }>({});
 
 
@@ -76,11 +77,28 @@ export function DbProvider({ children }: { children: ReactNode }) {
         }
     }
 
+    const placeOrder = async (userId: string, book: Book): Promise<void> => {
+        const timeStamp = new Date();
+        try {
+            await addDoc(collection(firestore, "orders"), {
+                userId,
+                book,
+                order_at: timeStamp,
+                status: "Pending"
+            });
+            toast.success('success! order placed successfully');
+        } catch (error) {
+            toast.error('sorry! Error placing order:');
+            console.log(error);
+        }
+
+    }
+
     useEffect(() => {
         setLoading(false);
     }, []);
 
-    const value = { addBook, getBooks, getImageUrl, saveContact };
+    const value = { addBook, getBooks, getImageUrl, saveContact, placeOrder };
 
     return (
         <DbContext.Provider value={value}>
