@@ -1,14 +1,17 @@
 import { app } from "../firebase";
 import { useContext, useState, useEffect, createContext, ReactNode } from "react";
-import { User, getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, onAuthStateChanged, updateProfile, GoogleAuthProvider, signOut } from "firebase/auth";
+import { User, getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, onAuthStateChanged, updateProfile, GoogleAuthProvider, signOut, updateEmail } from "firebase/auth";
 import { toast } from "react-toastify";
+import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 
 const AuthContext = createContext<{
     user?: User | null;
-    createUser?: (name: string, email: string, password: string) => void;
-    loginUser?: (email: string, password: string) => void;
+    createUser?: (name: string, email: string, password: string) => Promise<void>;
+    loginUser?: (email: string, password: string) => Promise<void>;
     logoutUser?: () => void;
     loginWithGoogle?: () => void;
+    updateProfileDetails?: (name: string, profileImage: File) => Promise<void>;
+    updateUserEmail?: (email: string) => Promise<void>;
 }>({});
 
 
@@ -18,6 +21,7 @@ export const useAuth = () => useContext(AuthContext);
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState<boolean>(true);
     const auth = getAuth(app);
+    const storage = getStorage(app);
     const provider = new GoogleAuthProvider();
     const [user, setUser] = useState<User | null>(null);
 
@@ -65,6 +69,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }
 
+    const updateProfileDetails = async (name: string, profileImage: File): Promise<void> => {
+        try {
+            if (!auth.currentUser) {
+                toast.error('Erorr! on updating user profile');
+                return;
+            }
+            const imgaeRef = ref(storage, `uploads/images/users/${Date.now()}-${name}`);
+            const uploadResult = await uploadBytes(imgaeRef, profileImage);
+            const photoURL = await getDownloadURL(ref(storage, uploadResult.ref.fullPath));
+            await updateProfile(auth.currentUser, {
+                displayName: name, photoURL
+            });
+            toast.success('success! Profile details updated Successfuly');
+        } catch (error) {
+            console.log("Error! on updating  user profile");
+            toast.error("Error! on updating  user profile");
+        }
+
+    }
+
+    const updateUserEmail = async (email: string): Promise<void> => {
+        try {
+            if (!auth.currentUser) {
+                toast.error('Erorr! on updating user profile');
+                return;
+            }
+            await updateEmail(auth.currentUser, email);
+            toast.success('success! email  updated Successfuly');
+        } catch (error) {
+            console.log("Error! on updating  user email");
+            toast.error("Error! on updating  user email");
+        }
+    }
+
     useEffect(() => {
         onAuthStateChanged(auth, user => {
             if (user) {
@@ -76,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
     }, [auth]);
 
-    const value = { user, createUser, loginUser, logoutUser, loginWithGoogle };
+    const value = { user, createUser, loginUser, logoutUser, loginWithGoogle, updateProfileDetails, updateUserEmail };
 
     return (
         <AuthContext.Provider value={value}>

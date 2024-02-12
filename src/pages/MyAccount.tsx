@@ -11,7 +11,7 @@ export default function MyAccount() {
           <h2 className="text-2xl font-semibold text-gray-800">My Account</h2>
           <div className="relative w-20 h-20">
             <img
-              src={user && user.photoURL ? user.photoURL : imageUrl}
+              src={(user && user.photoURL) ? user.photoURL : imageUrl}
               alt="User Profile"
               className="rounded-full object-fill"
             />

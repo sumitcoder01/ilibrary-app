@@ -22,6 +22,7 @@ export default function ViewOrders() {
 
   return (
     <section className="text-gray-600 body-font overflow-hidden">
+      <h1 className='text-xl mx-5 mb-10 mt-1'>Book Orders</h1>
       < BookOrderList orderDetails={orderDetails} />
     </section>
   );

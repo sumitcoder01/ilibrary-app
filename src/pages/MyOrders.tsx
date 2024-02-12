@@ -22,6 +22,7 @@ export default function MyOrders() {
   }, []);
   return (
     <section className='min-h-screen'>
+      <h1 className='text-xl mx-5 mb-10 mt-1'>My Orders</h1>
       <OrderList orders={orders} />
     </section>
   )
