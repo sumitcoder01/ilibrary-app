@@ -1,8 +1,8 @@
 import { app } from "../firebase";
 import { useContext, useState, useEffect, createContext, ReactNode } from "react";
 import { toast } from "react-toastify";
-import { addDoc, collection, getFirestore, getDocs, query, where } from "firebase/firestore";
-import { getDownloadURL, getStorage, list, ref, uploadBytes } from "firebase/storage";
+import { addDoc, collection, getFirestore, getDocs, query, where, doc, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
+import { deleteObject, getDownloadURL, getStorage, list, ref, uploadBytes } from "firebase/storage";
 import { Book } from "../interfaces/book";
 import { User } from "firebase/auth";
 import { Order, OrderDetail } from "../interfaces/order";
@@ -18,6 +18,9 @@ const DbContext = createContext<{
     getBookOrders?: (bookId: string) => Promise<OrderDetail[]>;
     getMyBooks?: (userId: string) => Promise<Book[]>;
     getImages?: () => Promise<string[]>;
+    deleteBook?: (bookId: string, imageUrl: string) => Promise<void>;
+    updateBook?: (id: string, title: string, author: string, description: string, price: number, isbn: number, coverPic: File, imageUrl: string) => Promise<void>;
+    updateBookOrder?: (id: string, orderId: string, status: string) => Promise<void>;
 }>({});
 
 
@@ -86,7 +89,7 @@ export function DbProvider({ children }: { children: ReactNode }) {
     const placeOrder = async (user: User, book: Book): Promise<void> => {
         const timeStamp = new Date();
         try {
-            await addDoc(collection(firestore, "orders"), {
+            const orderDocRef = await addDoc(collection(firestore, "orders"), {
                 userId: user.uid,
                 book,
                 order_at: timeStamp,
@@ -94,6 +97,7 @@ export function DbProvider({ children }: { children: ReactNode }) {
             });
             await addDoc(collection(firestore, "books", book.id, "orders"), {
                 userId: user.uid,
+                orderId: orderDocRef.id,
                 displayName: user.displayName,
                 photoUrl: user.photoURL,
                 email: user.email,
@@ -167,11 +171,140 @@ export function DbProvider({ children }: { children: ReactNode }) {
         }
         return imageURLs;
     }
+
+    const updateBook = async (id: string, title: string, author: string, description: string, price: number, isbn: number, coverPic: File, imageUrl: string): Promise<void> => {
+        try {
+            if (coverPic) {
+                const imgaeRef = ref(storage, `uploads/images/books/${Date.now()}-${coverPic.name}`);
+                const uploadResult = await uploadBytes(imgaeRef, coverPic);
+                deleteObject(ref(storage, imageUrl));
+                imageUrl = uploadResult.ref.fullPath;
+            }
+
+            await updateDoc(doc(firestore, "books", id), {
+                title,
+                description,
+                author,
+                price,
+                isbn,
+                imageUrl
+            });
+            updateOrderByBookId(id, title, author, description, price, isbn, imageUrl);
+            console.log('Success on updating books');
+            toast.success('Success on updating books');
+        } catch (error) {
+            console.log("Error on updating books:", error);
+            toast.error('Error on updating books');
+        }
+    }
+
+    const updateOrderByBookId = async (id: string, title: string, author: string, description: string, price: number, isbn: number, imageUrl: string): Promise<void> => {
+        try {
+            const ordersSnapshot = await getDocs(query(collection(firestore, "orders"), where("book.id", "==", id)));
+
+            ordersSnapshot.forEach(async (doc) => {
+                await updateDoc(doc.ref, {
+                    "book.title": title,
+                    "book.description": description,
+                    "book.author": author,
+                    "book.price": price,
+                    "book.isbn": isbn,
+                    "book.imageUrl": imageUrl
+                });
+            });
+            console.log("updated  orders successfully");
+        } catch (error) {
+            console.error("Error updating order:", error);
+        }
+    }
+
+    const deleteBook = async (bookId: string, imageUrl: string): Promise<void> => {
+        try {
+            await deleteDoc(doc(firestore, "books", bookId));
+            if (imageUrl) {
+                deleteObject(ref(storage, imageUrl));
+            }
+            deleteOrdersByBookId(bookId);
+            console.log('Book deleted successfully.');
+            toast.success('Book deleted successfully.');
+        } catch (error) {
+            console.error('Error deleting book:', error);
+            toast.error('Error deleting book.');
+        }
+    }
+
+    const deleteOrdersByBookId = async (bookId: string): Promise<void> => {
+        try {
+            const ordersSnapshot = await getDocs(query(collection(firestore, "orders"), where("book.id", "==", bookId)));
+
+            ordersSnapshot.forEach(async (orderDoc) => {
+                await deleteDoc(doc(firestore, "orders", orderDoc.id));
+                deleteOrderInBookSubcollection(bookId, orderDoc.data().orderId)
+            });
+
+            console.log('All orders for the book deleted successfully.');
+            toast.success('All orders for the book deleted successfully.');
+        } catch (error) {
+            console.error('Error deleting orders:', error);
+            toast.error('Error deleting orders.');
+        }
+    }
+
+    const deleteOrderInBookSubcollection = async (bookId: string, orderId: string): Promise<void> => {
+        try {
+            const querySnapshot = await getDocs(query(collection(firestore, "books", bookId, "orders"), where("orderId", "==", orderId)));
+
+            if (!querySnapshot.empty) {
+                const orderDoc = querySnapshot.docs[0];
+                await deleteDoc(orderDoc.ref);
+
+                console.log("Order deleted successfully from the book subcollection");
+            } else {
+                console.log("Order not found in the book subcollection");
+            }
+        } catch (error) {
+            console.error('Error deleting order from book subcollection:', error);
+        }
+    }
+
+    const updateBookOrder = async (id: string, orderId: string, status: string): Promise<void> => {
+        try {
+            const orderDocRef = doc(firestore, "orders", orderId);
+            const orderDocSnapshot = await getDoc(orderDocRef);
+
+            if (orderDocSnapshot.exists()) {
+                const bookId = orderDocSnapshot.data().book.id;
+                await updateDoc(orderDocRef, { status });
+                updateOrder(bookId, id, status);
+                console.log("Order status updated successfully.");
+            } else {
+                console.log("Order not found.");
+            }
+        } catch (error) {
+            console.error("Error updating order status:", error);
+        }
+    }
+
+    const updateOrder = async (bookId: string, orderId: string, status: string): Promise<void> => {
+        try {
+            const orderDocRef = doc(firestore, "books", bookId, "orders", orderId);
+            const orderDocSnapshot = await getDoc(orderDocRef);
+            if (orderDocSnapshot.exists()) {
+                await updateDoc(orderDocRef, { status });
+                console.log("Order status updated successfully.");
+            } else {
+                console.log("Order not found.");
+            }
+        } catch (error) {
+            console.error("Error updating order status:", error);
+        }
+    }
+
     useEffect(() => {
         setLoading(false);
     }, []);
 
-    const value = { addBook, getBooks, getImageUrl, saveContact, placeOrder, getMyOrders, getBookOrders, getMyBooks, getImages };
+    const value = { addBook, getBooks, getImageUrl, saveContact, placeOrder, getMyOrders, getBookOrders, getMyBooks, getImages, updateBook, deleteBook, updateBookOrder };
 
     return (
         <DbContext.Provider value={value}>

@@ -77,8 +77,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
             let photoURL = user && user.photoURL;
             if (profileImage) {
-                const imgaeRef = ref(storage, `uploads/images/users/${Date.now()}-${name}`);
-                const uploadResult = await uploadBytes(imgaeRef, profileImage);
+                const imageRef = ref(storage, `uploads/images/users/${Date.now()}-${name}`);
+                const uploadResult = await uploadBytes(imageRef, profileImage);
                 photoURL = await getDownloadURL(ref(storage, uploadResult.ref.fullPath));
             }
             await updateProfile(auth.currentUser, {

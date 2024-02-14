@@ -15,6 +15,7 @@ export interface Order {
 
 export interface OrderDetail {
     id: string;
+    orderId:string;
     userId: string;
     displayName: string;
     photoUrl: string;
