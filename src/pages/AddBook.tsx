@@ -169,7 +169,7 @@ export default function AddBook() {
           </div>
           <div>
             <label
-              htmlFor="image"
+              htmlFor="coverPic"
               className="block text-sm font-medium leading-6 text-gray-900"
             >
               CoverPic

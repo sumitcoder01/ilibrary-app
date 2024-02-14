@@ -10,7 +10,7 @@ const AuthContext = createContext<{
     loginUser?: (email: string, password: string) => Promise<void>;
     logoutUser?: () => void;
     loginWithGoogle?: () => void;
-    updateProfileDetails?: (name: string, profileImage: File) => Promise<void>;
+    updateProfileDetails?: (name: string | null, profileImage: File | null) => Promise<void>;
     updateUserEmail?: (email: string) => Promise<void>;
 }>({});
 
@@ -69,18 +69,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }
 
-    const updateProfileDetails = async (name: string, profileImage: File): Promise<void> => {
+    const updateProfileDetails = async (name: string | null, profileImage: File | null): Promise<void> => {
         try {
             if (!auth.currentUser) {
                 toast.error('Erorr! on updating user profile');
                 return;
             }
-            const imgaeRef = ref(storage, `uploads/images/users/${Date.now()}-${name}`);
-            const uploadResult = await uploadBytes(imgaeRef, profileImage);
-            const photoURL = await getDownloadURL(ref(storage, uploadResult.ref.fullPath));
+            let photoURL = user && user.photoURL;
+            if (profileImage) {
+                const imgaeRef = ref(storage, `uploads/images/users/${Date.now()}-${name}`);
+                const uploadResult = await uploadBytes(imgaeRef, profileImage);
+                photoURL = await getDownloadURL(ref(storage, uploadResult.ref.fullPath));
+            }
             await updateProfile(auth.currentUser, {
                 displayName: name, photoURL
             });
+            if (user) setUser({ ...user, displayName: name, photoURL });
             toast.success('success! Profile details updated Successfuly');
         } catch (error) {
             console.log("Error! on updating  user profile");
@@ -92,10 +96,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const updateUserEmail = async (email: string): Promise<void> => {
         try {
             if (!auth.currentUser) {
-                toast.error('Erorr! on updating user profile');
+                toast.error('Erorr! on updating user email');
                 return;
             }
             await updateEmail(auth.currentUser, email);
+            if (user) setUser({ ...user, email });
             toast.success('success! email  updated Successfuly');
         } catch (error) {
             console.log("Error! on updating  user email");
