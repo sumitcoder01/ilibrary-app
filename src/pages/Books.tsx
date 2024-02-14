@@ -3,10 +3,12 @@ import { useFirestore } from "../context/dbContext";
 import { Book } from "../interfaces/book";
 import BookList from "../components/BookList";
 import { useAuth } from "../context/authContext";
+import Spinner from "../components/spinner/Spinner";
 
 
 export default function Books() {
   const { getBooks } = useFirestore();
+  const [loading,setLoading]=useState<boolean>(true);
   const { user } = useAuth();
   const [books, setBooks] = useState<Book[]>([]);
 
@@ -17,6 +19,7 @@ export default function Books() {
       bookList = bookList.filter(book => user.uid !== book.sellerId)
     }
     setBooks(bookList);
+    setLoading(false);
   }
 
   useEffect(() => {
@@ -27,7 +30,7 @@ export default function Books() {
   return (
     <section className='min-h-screen'>
       <h1 className='text-xl mx-5 mb-10 mt-1'>Top Books in Store</h1>
-      <BookList flag={true} books={books} />
+      {!loading ? <BookList flag={true} books={books} /> : <Spinner/>}
     </section>
   )
 }

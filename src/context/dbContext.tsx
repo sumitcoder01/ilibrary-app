@@ -2,7 +2,7 @@ import { app } from "../firebase";
 import { useContext, useState, useEffect, createContext, ReactNode } from "react";
 import { toast } from "react-toastify";
 import { addDoc, collection, getFirestore, getDocs, query, where } from "firebase/firestore";
-import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
+import { getDownloadURL, getStorage, list, ref, uploadBytes } from "firebase/storage";
 import { Book } from "../interfaces/book";
 import { User } from "firebase/auth";
 import { Order, OrderDetail } from "../interfaces/order";
@@ -17,6 +17,7 @@ const DbContext = createContext<{
     getMyOrders?: (userId: string) => Promise<Order[]>;
     getBookOrders?: (bookId: string) => Promise<OrderDetail[]>;
     getMyBooks?: (userId: string) => Promise<Book[]>;
+    getImages?: () => Promise<string[]>;
 }>({});
 
 
@@ -151,11 +152,26 @@ export function DbProvider({ children }: { children: ReactNode }) {
         return ordersList;
     }
 
+    const getImages = async (): Promise<string[]> => {
+        const imageURLs: string[] = [];
+        try {
+            const carouselRef = ref(storage, 'uploads/images/carousel');
+            const imageList = await list(carouselRef, { maxResults: 6 });
+            for (const itemRef of imageList.items) {
+                const imageURL = await getDownloadURL(itemRef);
+                imageURLs.push(imageURL);
+            }
+        }
+        catch (error) {
+            console.log("Error listing files:", error);
+        }
+        return imageURLs;
+    }
     useEffect(() => {
         setLoading(false);
     }, []);
 
-    const value = { addBook, getBooks, getImageUrl, saveContact, placeOrder, getMyOrders, getBookOrders, getMyBooks };
+    const value = { addBook, getBooks, getImageUrl, saveContact, placeOrder, getMyOrders, getBookOrders, getMyBooks, getImages };
 
     return (
         <DbContext.Provider value={value}>

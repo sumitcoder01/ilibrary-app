@@ -1,13 +1,7 @@
-import { useEffect, useState } from "react";
 import { OrderDetail } from "../interfaces/order";
 import BookOrderCard from "./BookOrderCard";
 
 export default function BookOrderList({ orderDetails }: { orderDetails: OrderDetail[] }) {
-  const [loading, setLoading] = useState<boolean>(false);
-
-  useEffect(() => {
-    setLoading(true);
-  }, []);
 
   return (
     <div className="container px-5 py-12 mx-auto">
@@ -16,7 +10,7 @@ export default function BookOrderList({ orderDetails }: { orderDetails: OrderDet
           <BookOrderCard key={orderDetail.id} orderDetail={orderDetail} />
         ))}
       </div>
-      {loading && orderDetails.length === 0 && <div className="text-center text-lg">No Order yet!</div>}
+      {orderDetails.length === 0 && <div className="text-center text-lg">No Order yet!</div>}
     </div>
   )
 }
