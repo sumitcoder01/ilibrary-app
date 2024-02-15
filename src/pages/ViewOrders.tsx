@@ -9,7 +9,7 @@ export default function ViewOrders() {
   const { getBookOrders } = useFirestore();
   const { bookId } = useParams();
   const [orderDetails, setOrderDetails] = useState<OrderDetail[]>([]);
-  const [loading,setLoading]=useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const fetchOrders = async () => {
     if (!getBookOrders || !bookId) return;
@@ -17,6 +17,16 @@ export default function ViewOrders() {
     setOrderDetails(orderList);
     setLoading(false);
   }
+
+  const updateOrder = (id: string, status: string) => {
+    const updatedordersList = orderDetails.map(order => {
+      if (order.id === id) {
+        return { ...order, status };
+      }
+      return order;
+    });
+    setOrderDetails(updatedordersList);
+  };
 
   useEffect(() => {
     fetchOrders();
@@ -26,7 +36,7 @@ export default function ViewOrders() {
   return (
     <section className="text-gray-600 body-font overflow-hidden">
       <h1 className='text-xl mx-5 mb-10 mt-1'>Book Orders</h1>
-      {!loading ? < BookOrderList orderDetails={orderDetails} /> : <Spinner/>}
+      {!loading ? < BookOrderList orderDetails={orderDetails} updateOrder={updateOrder} /> : <Spinner />}
     </section>
   );
 }

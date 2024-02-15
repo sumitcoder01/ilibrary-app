@@ -8,7 +8,7 @@ import Modal from "./modal/Modal";
 import UpdateBook from "./modal/updateBook/UpdateBook";
 import DeleteBook from "./modal/deleteBook/DeleteBook";
 
-export default function BookCard({ book, flag }: { book: Book, flag: boolean }) {
+export default function BookCard({ book, flag, deleteBook, updateBook }: { book: Book, flag: boolean, deleteBook: (id: string) => void, updateBook: (book: Book) => void }) {
     const navigate = useNavigate();
     const [updateShow, setUpdateShow] = useState<boolean>(false);
     const [deleteShow, setDeleteShow] = useState<boolean>(false);
@@ -79,8 +79,8 @@ export default function BookCard({ book, flag }: { book: Book, flag: boolean }) 
                     </div>}
                 </div>
             </div>
-            {updateShow && book && <Modal onClose={toggalUpdateModal}><UpdateBook book={book} onClose={toggalUpdateModal} /></Modal>}
-            {deleteShow && book && <Modal onClose={toggalDeleteModal}><DeleteBook bookId={book.id} imageUrl={book.imageUrl} onClose={toggalDeleteModal} /></Modal>}
+            {updateShow && book && <Modal onClose={toggalUpdateModal}><UpdateBook book={book} onClose={toggalUpdateModal} updateBookItem={updateBook} /></Modal>}
+            {deleteShow && book && <Modal onClose={toggalDeleteModal}><DeleteBook bookId={book.id} imageUrl={book.imageUrl} onClose={toggalDeleteModal} deleteBookItem={deleteBook} /></Modal>}
         </div>
     );
 }

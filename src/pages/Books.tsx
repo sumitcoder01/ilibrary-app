@@ -12,6 +12,12 @@ export default function Books() {
   const { user } = useAuth();
   const [books, setBooks] = useState<Book[]>([]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const updateBook=(_book:Book)=>{}
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const deleteBook =(_id:string)=>{}
+  
   const fetchBooks = async () => {
     if (!getBooks) return;
     let bookList = await getBooks() as Book[];
@@ -30,7 +36,7 @@ export default function Books() {
   return (
     <section className='min-h-screen'>
       <h1 className='text-xl mx-5 mb-10 mt-1'>Top Books in Store</h1>
-      {!loading ? <BookList flag={true} books={books} /> : <Spinner/>}
+      {!loading ? <BookList flag={true} books={books} updateBook={updateBook} deleteBook={deleteBook} /> : <Spinner/>}
     </section>
   )
 }

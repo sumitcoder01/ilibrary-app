@@ -1,10 +1,11 @@
 import { useFirestore } from "../../../context/dbContext";
 
-export default function DeleteBook({ bookId, imageUrl, onClose }: { bookId: string, imageUrl: string, onClose: () => void }) {
+export default function DeleteBook({ bookId, imageUrl, onClose, deleteBookItem }: { bookId: string, imageUrl: string, onClose: () => void, deleteBookItem: (id: string) => void }) {
   const { deleteBook } = useFirestore();
 
   const handleOnSubmit = () => {
     if (deleteBook) deleteBook(bookId, imageUrl);
+    deleteBookItem(bookId)
     onClose();
   };
 

@@ -3,7 +3,7 @@ import { IoMdSend } from "react-icons/io";
 import { useFirestore } from "../../../context/dbContext";
 
 
-export default function UpdateOrder({ id, orderId, status, onClose }: { id: string, orderId: string, status: string, onClose: () => void }) {
+export default function UpdateOrder({ id, orderId, status, onClose, updateOrder }: { id: string, orderId: string, status: string, onClose: () => void, updateOrder: (id: string, status: string) => void }) {
   const [currentStatus, setCurrentStatus] = useState<string>(status);
   const { updateBookOrder } = useFirestore();
 
@@ -11,6 +11,7 @@ export default function UpdateOrder({ id, orderId, status, onClose }: { id: stri
     e.preventDefault();
     if (updateBookOrder)
       updateBookOrder(id, orderId, currentStatus);
+    updateOrder(id, currentStatus)
     onClose();
   };
 

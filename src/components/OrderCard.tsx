@@ -43,7 +43,7 @@ export default function OrderCard({ order }: { order: Order }) {
                     Price: ₹<span>{price}</span>
                 </p>
                 <p className="block font-sans text-base antialiased font-light leading-relaxed text-inherit">
-                    Status: <span className={`${status !== "Pending" ? "text-green-500" : "text-yellow-500"}`}>{status}</span>
+                    Status: <span className={`${status === "Pending" ? "text-yellow-500" : status == "Cancelled" ? "text-red-500" : "text-green-500"}`}>{status}</span>
                 </p>
                 <p className="block font-sans text-base antialiased font-light leading-relaxed text-inherit">
                     Order Date: <span>{date}</span>

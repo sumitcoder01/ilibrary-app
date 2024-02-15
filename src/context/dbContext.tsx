@@ -19,7 +19,7 @@ const DbContext = createContext<{
     getMyBooks?: (userId: string) => Promise<Book[]>;
     getImages?: () => Promise<string[]>;
     deleteBook?: (bookId: string, imageUrl: string) => Promise<void>;
-    updateBook?: (id: string, title: string, author: string, description: string, price: number, isbn: number, coverPic: File | null, imageUrl: string) => Promise<void>;
+    updateBook?: (id: string, title: string, author: string, description: string, price: number, isbn: number, coverPic: File | null, imageUrl: string) => Promise<string>;
     updateBookOrder?: (id: string, orderId: string, status: string) => Promise<void>;
 }>({});
 
@@ -173,7 +173,7 @@ export function DbProvider({ children }: { children: ReactNode }) {
         return imageURLs;
     }
 
-    const updateBook = async (id: string, title: string, author: string, description: string, price: number, isbn: number, coverPic: File | null, imageUrl: string): Promise<void> => {
+    const updateBook = async (id: string, title: string, author: string, description: string, price: number, isbn: number, coverPic: File | null, imageUrl: string): Promise<string> => {
         try {
             if (coverPic) {
                 const imgaeRef = ref(storage, `uploads/images/books/${Date.now()}-${coverPic.name}`);
@@ -190,11 +190,12 @@ export function DbProvider({ children }: { children: ReactNode }) {
                 isbn,
                 imageUrl
             });
-            updateOrderByBookId(id, title, author, description, price, isbn, imageUrl);
+             updateOrderByBookId(id, title, author, description, price, isbn, imageUrl);
             toast.success('Success on updating books');
         } catch (error) {
             toast.error('Error on updating books');
         }
+        return imageUrl;
     }
 
     const updateOrderByBookId = async (id: string, title: string, author: string, description: string, price: number, isbn: number, imageUrl: string): Promise<void> => {
@@ -219,7 +220,6 @@ export function DbProvider({ children }: { children: ReactNode }) {
     const deleteBook = async (bookId: string, imageUrl: string): Promise<void> => {
         try {
             await deleteDoc(doc(firestore, "books", bookId));
-            await deleteDoc(doc(firestore, "books", bookId, "orders"));
             if (imageUrl) {
                 deleteObject(ref(storage, imageUrl));
             }
@@ -250,7 +250,8 @@ export function DbProvider({ children }: { children: ReactNode }) {
 
             if (!ordersSnapshot.empty) {
                 ordersSnapshot.forEach(async (doc) => {
-                    await deleteDoc(doc.ref);
+                    const orderDocRef = doc.ref;
+                    await deleteDoc(orderDocRef);
                 });
             } else {
                 console.log("No orders found in the book subcollection");

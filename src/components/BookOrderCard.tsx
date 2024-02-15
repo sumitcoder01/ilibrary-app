@@ -4,7 +4,7 @@ import { OrderDetail } from "../interfaces/order";
 import UpdateOrder from "./modal/updateOrder/UpdateOrder";
 import Modal from "./modal/Modal";
 
-export default function BookOrderCard({ orderDetail }: { orderDetail: OrderDetail }) {
+export default function BookOrderCard({ orderDetail, updateOrder }: { orderDetail: OrderDetail, updateOrder: (id: string, status: string)=>void }) {
   const [show, setShow] = useState<boolean>(false);
   const { displayName, email, photoUrl, status, order_at } = orderDetail;
   const [date, setDate] = useState<string>("");
@@ -43,7 +43,7 @@ export default function BookOrderCard({ orderDetail }: { orderDetail: OrderDetai
           </button>
         </div>
       </div>
-      {show && orderDetail && <Modal onClose={toggalModal}><UpdateOrder id={orderDetail.id} orderId={orderDetail.orderId} status={orderDetail.status} onClose={toggalModal} /></Modal>}
+      {show && orderDetail && <Modal onClose={toggalModal}><UpdateOrder id={orderDetail.id} orderId={orderDetail.orderId} status={orderDetail.status} onClose={toggalModal} updateOrder={updateOrder} /></Modal>}
     </div>
   )
 }
