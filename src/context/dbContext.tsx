@@ -19,7 +19,7 @@ const DbContext = createContext<{
     getMyBooks?: (userId: string) => Promise<Book[]>;
     getImages?: () => Promise<string[]>;
     deleteBook?: (bookId: string, imageUrl: string) => Promise<void>;
-    updateBook?: (id: string, title: string, author: string, description: string, price: number, isbn: number, coverPic: File, imageUrl: string) => Promise<void>;
+    updateBook?: (id: string, title: string, author: string, description: string, price: number, isbn: number, coverPic: File | null, imageUrl: string) => Promise<void>;
     updateBookOrder?: (id: string, orderId: string, status: string) => Promise<void>;
 }>({});
 
@@ -95,9 +95,10 @@ export function DbProvider({ children }: { children: ReactNode }) {
                 order_at: timeStamp,
                 status: "Pending"
             });
+            const orderId = orderDocRef.id;
             await addDoc(collection(firestore, "books", book.id, "orders"), {
                 userId: user.uid,
-                orderId: orderDocRef.id,
+                orderId,
                 displayName: user.displayName,
                 photoUrl: user.photoURL,
                 email: user.email,
@@ -172,7 +173,7 @@ export function DbProvider({ children }: { children: ReactNode }) {
         return imageURLs;
     }
 
-    const updateBook = async (id: string, title: string, author: string, description: string, price: number, isbn: number, coverPic: File, imageUrl: string): Promise<void> => {
+    const updateBook = async (id: string, title: string, author: string, description: string, price: number, isbn: number, coverPic: File | null, imageUrl: string): Promise<void> => {
         try {
             if (coverPic) {
                 const imgaeRef = ref(storage, `uploads/images/books/${Date.now()}-${coverPic.name}`);
@@ -190,10 +191,8 @@ export function DbProvider({ children }: { children: ReactNode }) {
                 imageUrl
             });
             updateOrderByBookId(id, title, author, description, price, isbn, imageUrl);
-            console.log('Success on updating books');
             toast.success('Success on updating books');
         } catch (error) {
-            console.log("Error on updating books:", error);
             toast.error('Error on updating books');
         }
     }
@@ -212,20 +211,20 @@ export function DbProvider({ children }: { children: ReactNode }) {
                     "book.imageUrl": imageUrl
                 });
             });
-            console.log("updated  orders successfully");
         } catch (error) {
-            console.error("Error updating order:", error);
+            console.log("Error updating order:", error);
         }
     }
 
     const deleteBook = async (bookId: string, imageUrl: string): Promise<void> => {
         try {
             await deleteDoc(doc(firestore, "books", bookId));
+            await deleteDoc(doc(firestore, "books", bookId, "orders"));
             if (imageUrl) {
                 deleteObject(ref(storage, imageUrl));
             }
-            deleteOrdersByBookId(bookId);
-            console.log('Book deleted successfully.');
+            await deleteOrdersByBookId(bookId);
+            await deleteOrderInBookSubcollectionData(bookId);
             toast.success('Book deleted successfully.');
         } catch (error) {
             console.error('Error deleting book:', error);
@@ -239,33 +238,27 @@ export function DbProvider({ children }: { children: ReactNode }) {
 
             ordersSnapshot.forEach(async (orderDoc) => {
                 await deleteDoc(doc(firestore, "orders", orderDoc.id));
-                deleteOrderInBookSubcollection(bookId, orderDoc.data().orderId)
             });
-
-            console.log('All orders for the book deleted successfully.');
-            toast.success('All orders for the book deleted successfully.');
         } catch (error) {
-            console.error('Error deleting orders:', error);
-            toast.error('Error deleting orders.');
+            console.log('Error deleting orders:', error);
         }
     }
 
-    const deleteOrderInBookSubcollection = async (bookId: string, orderId: string): Promise<void> => {
+    const deleteOrderInBookSubcollectionData = async (bookId: string): Promise<void> => {
         try {
-            const querySnapshot = await getDocs(query(collection(firestore, "books", bookId, "orders"), where("orderId", "==", orderId)));
+            const ordersSnapshot = await getDocs(collection(firestore, "books", bookId, "orders"));
 
-            if (!querySnapshot.empty) {
-                const orderDoc = querySnapshot.docs[0];
-                await deleteDoc(orderDoc.ref);
-
-                console.log("Order deleted successfully from the book subcollection");
+            if (!ordersSnapshot.empty) {
+                ordersSnapshot.forEach(async (doc) => {
+                    await deleteDoc(doc.ref);
+                });
             } else {
-                console.log("Order not found in the book subcollection");
+                console.log("No orders found in the book subcollection");
             }
         } catch (error) {
-            console.error('Error deleting order from book subcollection:', error);
+            console.log('Error retrieving orders from book subcollection:', error);
         }
-    }
+    };
 
     const updateBookOrder = async (id: string, orderId: string, status: string): Promise<void> => {
         try {
@@ -275,13 +268,14 @@ export function DbProvider({ children }: { children: ReactNode }) {
             if (orderDocSnapshot.exists()) {
                 const bookId = orderDocSnapshot.data().book.id;
                 await updateDoc(orderDocRef, { status });
-                updateOrder(bookId, id, status);
-                console.log("Order status updated successfully.");
+                await updateOrder(bookId, id, status);
+                toast.success('Success! Order updated succesufully');
             } else {
-                console.log("Order not found.");
+                toast.error('Order not found');
             }
         } catch (error) {
             console.error("Error updating order status:", error);
+            toast.error("Error updating order status:");
         }
     }
 
@@ -291,12 +285,11 @@ export function DbProvider({ children }: { children: ReactNode }) {
             const orderDocSnapshot = await getDoc(orderDocRef);
             if (orderDocSnapshot.exists()) {
                 await updateDoc(orderDocRef, { status });
-                console.log("Order status updated successfully.");
             } else {
                 console.log("Order not found.");
             }
         } catch (error) {
-            console.error("Error updating order status:", error);
+            console.log("Error updating order status:", error);
         }
     }
 
