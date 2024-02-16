@@ -79,7 +79,7 @@ export default function BookCard({ book, flag, deleteBook, updateBook }: { book:
                     </div>}
                 </div>
             </div>
-            {updateShow && book && <Modal onClose={toggalUpdateModal}><UpdateBook book={book} onClose={toggalUpdateModal} updateBookItem={updateBook} /></Modal>}
+            {updateShow && book && <Modal onClose={toggalUpdateModal}><UpdateBook book={book} onClose={toggalUpdateModal} updateBookItem={updateBook} setUrl={setUrl} /></Modal>}
             {deleteShow && book && <Modal onClose={toggalDeleteModal}><DeleteBook bookId={book.id} imageUrl={book.imageUrl} onClose={toggalDeleteModal} deleteBookItem={deleteBook} /></Modal>}
         </div>
     );

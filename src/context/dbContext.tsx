@@ -195,7 +195,8 @@ export function DbProvider({ children }: { children: ReactNode }) {
         } catch (error) {
             toast.error('Error on updating books');
         }
-        return imageUrl;
+        const url = await getImageUrl(imageUrl)
+        return url;
     }
 
     const updateOrderByBookId = async (id: string, title: string, author: string, description: string, price: number, isbn: number, imageUrl: string): Promise<void> => {

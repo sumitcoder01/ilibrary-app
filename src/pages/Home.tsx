@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import CarouselSkeleton from "../components/carousel/CarouselSkeleton";
 import Carousel from "../components/carousel/Carousel";
 import { useFirestore } from "../context/dbContext";
+import TestimonialSection from "../components/testimonials/TestimonialSection";
 
 export default function Home() {
     const { getImages } = useFirestore();
@@ -23,6 +24,7 @@ export default function Home() {
     return (
         <section className="min-h-screen">
             {loading || images.length === 0 ? <CarouselSkeleton /> : <Carousel images={images} />}
+            <TestimonialSection/>
         </section>
     )
 }

@@ -3,7 +3,7 @@ import { Book } from "../../../interfaces/book";
 import { IoMdSend } from "react-icons/io";
 import { useFirestore } from "../../../context/dbContext";
 
-export default function UpdateBook({ book, onClose, updateBookItem }: { book: Book, onClose: () => void, updateBookItem: (book: Book) => void }) {
+export default function UpdateBook({ book, onClose, updateBookItem, setUrl }: { book: Book, onClose: () => void, updateBookItem: (book: Book) => void, setUrl: React.Dispatch<React.SetStateAction<string>> }) {
     const { updateBook } = useFirestore();
     const [image, setImage] = useState<File | null>(null);
     const [currentBook, setCurrentBook] = useState<Book>(book);
@@ -25,6 +25,7 @@ export default function UpdateBook({ book, onClose, updateBookItem }: { book: Bo
         if (updateBook)
             newImageUrl = await updateBook(id, title, author, description, Number(price), Number(isbn), image, imageUrl);
         updateBookItem({ ...currentBook, imageUrl: newImageUrl });
+        setUrl(newImageUrl);
         onClose();
     };
 
